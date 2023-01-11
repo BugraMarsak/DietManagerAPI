@@ -29,9 +29,9 @@ namespace WEBAPI.Controllers
             return BadRequest(result);
         }
         [HttpGet("GetById")]
-        public IActionResult GetById(int Id)
+        public IActionResult GetById(int FoodId)
         {
-            var result = _foodListService.GetById(Id);
+            var result = _foodListService.GetById(FoodId);
             if (result.Success)
             {
                 return Ok(result);
@@ -39,9 +39,9 @@ namespace WEBAPI.Controllers
             return BadRequest(result);
         }
         [HttpGet("GetAllWithoutAllergens")]
-        public IActionResult GetAllWithoutAllergens(int Id)
+        public IActionResult GetAllWithoutAllergens(int UserId)
         {
-            var result = _foodListService.GetAllWithoutAllergens(Id);
+            var result = _foodListService.GetAllWithoutAllergens(UserId);
             if (result.Success)
             {
                 return Ok(result);

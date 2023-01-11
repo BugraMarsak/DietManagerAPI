@@ -24,6 +24,8 @@ namespace DataAccess.Concrete.Context
         public DbSet<FoodList> FoodList { get; set; }
         public DbSet<DietianClientLists> DietianClients  { get; set; }
         public DbSet<Allergen> Allergen { get; set; }
+        public DbSet<Notes> Notes { get; set; }
+        public DbSet<Message> Messages { get; set; }
         public DbSet<Appointment> Appointment { get; set; }
         public DbSet<ClientDietList> ClientDietList { get; set; }
         public DbSet<MeasurementResult> MeasurementResults { get; set; }

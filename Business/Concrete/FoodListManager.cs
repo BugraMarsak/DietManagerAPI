@@ -37,11 +37,15 @@ namespace Business.Concrete
             {
                 ClientAllergies = context.ClientAllergies.FirstOrDefault(c => c.ClientId == ClientId);
                 foodLists = context.FoodList.ToList();
-                temp = ClientAllergies.AllergiesList.Split(",");
-                foreach (var item in temp)
+                if (ClientAllergies != null)
                 {
-                    foodLists = foodLists.Where(f=>!(f.AllergenArray.Any(a=>(a==item)))).ToList();
+                    temp = ClientAllergies.AllergiesList.Split(",");
+                    foreach (var item in temp)
+                    {
+                        foodLists = foodLists.Where(f => !(f.AllergenArray.Any(a => (a == item)))).ToList();
+                    }
                 }
+                
 
             }
             return new SuccessDataResult<List<FoodList>>(foodLists, Messages.Listed);

@@ -33,9 +33,9 @@ namespace WEBAPI.Controllers
             return BadRequest(result);
         }
         [HttpGet("GetById")]
-        public IActionResult GetById(int Id)
+        public IActionResult GetById(int UserId)
         {
-            var result = _clientDietListService.GetByUserId(Id);
+            var result = _clientDietListService.GetByUserId(UserId);
             if (result.Success)
             {
                 return Ok(result);
@@ -59,7 +59,7 @@ namespace WEBAPI.Controllers
             using (DietManagerContext context = new DietManagerContext())
             {
                 List<ClientDietList> sad = new List<ClientDietList>();
-                sad = context.ClientDietList.OrderByDescending(x => x.Session).ToList();
+                sad = context.ClientDietList.OrderByDescending(x => x.Session).Where(c => c.ClientId == ClientId).ToList();
                 sad = sad.DistinctBy(x => x.Session).ToList();
                 if (sad != null)
                 {
@@ -81,7 +81,10 @@ namespace WEBAPI.Controllers
             {
                 List<ClientDietList> sad = new List<ClientDietList>();
                 sad = context.ClientDietList.Where(c=> c.ClientId==ClientId && c.Session == Session).ToList();
-                
+                foreach (var item in sad)
+                {
+                    item.FoodNames = getFoodNames(item);
+                }
                 if (sad != null)
                 {
                     var result = new SuccessDataResult<List<ClientDietList>>(sad, Messages.Listed);
@@ -141,6 +144,28 @@ namespace WEBAPI.Controllers
             }
             return BadRequest(result);
         }
+
+        private string[] getFoodNames(ClientDietList clientDietList)
+        {
+            string[] res = new string[clientDietList.DietInfo.Split(",").Length];
+            var tempData = clientDietList.DietInfo.Split(",");
+            using (DietManagerContext context = new DietManagerContext())
+            {
+                var foodlist = context.FoodList.ToList();
+                for (int i = 0; i < clientDietList.DietInfo.Split(",").Length; i++)
+                {
+                   var tempFood = foodlist.FirstOrDefault(f=>f.Id+"" == tempData[i]);
+                    if(tempFood != null)
+                    {
+                        res[i] = tempFood.FoodName;
+                    }
+                }
+
+            }
+            return res;
+        }
+
+
 
     }
 }

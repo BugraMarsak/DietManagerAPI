@@ -19,10 +19,11 @@ namespace WEBAPI.Controllers
     public class UserController : Controller
     {
         IUserService _userService;
-
-        public UserController(IUserService userService)
+        IWebHostEnvironment env;
+        public UserController(IUserService userService,IWebHostEnvironment env)
         {
             _userService = userService;
+            this.env = env;
         }
 
         [HttpGet("test")]
@@ -35,9 +36,9 @@ namespace WEBAPI.Controllers
         }
 
         [HttpGet("GetById")]
-        public IActionResult GetById(int Id)
+        public IActionResult GetById(int UserId)
         {
-            var result = _userService.GetById(Id);
+            var result = _userService.GetById(UserId);
             if (result.Success)
             {
                 return Ok(result);
@@ -60,7 +61,7 @@ namespace WEBAPI.Controllers
             return BadRequest(result);
         }
 
-        [HttpGet("setDietatian")] // musteri tarafindan yapilmis secim 100 den fazla client almama gibi bir durum ekleyebilirim.
+        [HttpGet("setDietatian")] 
         public IActionResult setDietatian(int DieatianId, int ClientId)
         {
             using (DietManagerContext context = new DietManagerContext())
@@ -118,8 +119,101 @@ namespace WEBAPI.Controllers
             }
         }
 
+        [HttpGet, DisableRequestSizeLimit]
+        public IActionResult GetPdf(int UserId)
+        {
 
-        
+
+            string route = Path.Combine(env.WebRootPath, $"{UserId}_Files");
+            var filesInOrder = new DirectoryInfo(route).GetFiles()  //Dosyada bulunan dosyalarin isimlerini degisme tarihlerine gore aliyor.
+                        .OrderByDescending(f => f.LastWriteTime)
+                        .Select(f => f.Name)
+                        .ToList();
+            var filename = $"{filesInOrder.FirstOrDefault()}";
+
+
+
+            string fileRoute = Path.Combine(route, filename);
+
+            byte[] pdfData = System.IO.File.ReadAllBytes(fileRoute);
+
+            return File(pdfData, "application/pdf");
+        }
+
+
+        [HttpGet("getByName"), DisableRequestSizeLimit]
+        public IActionResult GetByPdfName(int UserId, string pdfName)
+        {
+
+
+            string route = Path.Combine(env.WebRootPath, $"{UserId}_Files");
+            var filesInOrder = new DirectoryInfo(route).GetFiles()  //Dosyada bulunan dosyalarin isimlerini degisme tarihlerine gore aliyor.
+                        .OrderByDescending(f => f.LastWriteTime)
+                        .Select(f => f.Name)
+                        .ToList();
+            var filename = $"{filesInOrder.FirstOrDefault(f => f == pdfName)}";
+
+
+            string fileRoute = Path.Combine(route, filename);
+
+            byte[] pdfData = System.IO.File.ReadAllBytes(fileRoute);
+
+            return File(pdfData, "application/pdf");
+        }
+        [HttpPost("SavePdf"), DisableRequestSizeLimit]
+        public async Task<IActionResult> PostPdf([FromForm] IFormFile file, int UserId)
+        {
+            using (DietManagerContext context = new DietManagerContext())
+            {
+
+
+
+                string route = Path.Combine(env.WebRootPath, $"{UserId}_Files");
+                if (!Directory.Exists(route))
+                {
+                    Directory.CreateDirectory(route);
+                }
+                var filesInOrder = new DirectoryInfo(route).GetFiles()
+                        .OrderByDescending(f => f.LastWriteTime)
+                        .Select(f => f.Name)
+                        .ToList();
+                var lastFile = filesInOrder.FirstOrDefault();
+                if (lastFile != null)
+                {
+                    lastFile = lastFile.Substring(lastFile.LastIndexOf("_") + 1);
+                }
+                var filename = $"{UserId}_{DateTime.Now.ToString("s").Replace("T","-").Replace("-","_").Replace(":","_")}";
+                
+                string fileRoute = Path.Combine(route, filename);
+                using (var stream = new FileStream(fileRoute, FileMode.Create))
+                {
+                    await file.OpenReadStream().CopyToAsync(stream);
+                }
+
+                return Ok();
+
+            }
+        }
+
+        [HttpGet("getFileNames"), DisableRequestSizeLimit]
+        public IActionResult GetByPdfName(int UserId)
+        {
+
+
+            string route = Path.Combine(env.WebRootPath, $"{UserId}_Files");
+            if (!Directory.Exists(route))
+            {
+                Directory.CreateDirectory(route);
+            }
+            var filesInOrder = new DirectoryInfo(route).GetFiles()  //Dosyada bulunan dosyalarin isimlerini degisme tarihlerine gore aliyor.
+                        .OrderByDescending(f => f.LastWriteTime)
+                        .Select(f => f.Name)
+                        .ToList();
+
+            return Ok(filesInOrder);
+        }
+
+
 
     }
 }
