@@ -54,6 +54,26 @@ namespace WEBAPI.Controllers
                 return BadRequest(result);
             }
         }
+        [HttpGet("getUserNextAppointment")]
+        public IActionResult asd(int clientId)
+        {
+            using (DietManagerContext context = new DietManagerContext())
+            {
+                
+                var AppointmentList =  context.Appointment.Where(a=>a.ClientId==clientId && a.AppointmentDate> DateTime.Now).OrderBy(a=>a.AppointmentDate).ToList();
+                var nextAppointment = AppointmentList.FirstOrDefault();
+                if (nextAppointment!=null)
+                {
+                    return Ok(nextAppointment);
+                }
+                else
+                {
+                    return BadRequest();
+                }
+                
+
+            }
+        }
 
         [HttpGet("GetTodayAppointments")]
         public IActionResult GetTodayAppointments(int dietianId,int day,int month,int year)

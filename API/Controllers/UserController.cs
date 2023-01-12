@@ -125,6 +125,10 @@ namespace WEBAPI.Controllers
 
 
             string route = Path.Combine(env.WebRootPath, $"{UserId}_Files");
+            if (!Directory.Exists(route))
+            {
+                Directory.CreateDirectory(route);
+            }
             var filesInOrder = new DirectoryInfo(route).GetFiles()  //Dosyada bulunan dosyalarin isimlerini degisme tarihlerine gore aliyor.
                         .OrderByDescending(f => f.LastWriteTime)
                         .Select(f => f.Name)
@@ -147,12 +151,19 @@ namespace WEBAPI.Controllers
 
 
             string route = Path.Combine(env.WebRootPath, $"{UserId}_Files");
+            if (!Directory.Exists(route))
+            {
+                Directory.CreateDirectory(route);
+            }
             var filesInOrder = new DirectoryInfo(route).GetFiles()  //Dosyada bulunan dosyalarin isimlerini degisme tarihlerine gore aliyor.
                         .OrderByDescending(f => f.LastWriteTime)
                         .Select(f => f.Name)
                         .ToList();
             var filename = $"{filesInOrder.FirstOrDefault(f => f == pdfName)}";
-
+            if (filename == "")
+            {
+                return BadRequest();
+            }
 
             string fileRoute = Path.Combine(route, filename);
 
@@ -160,6 +171,33 @@ namespace WEBAPI.Controllers
 
             return File(pdfData, "application/pdf");
         }
+
+        [HttpGet("getLatestPdf"), DisableRequestSizeLimit]
+        public IActionResult getLatestPdf(int UserId)
+        {
+
+            string route = Path.Combine(env.WebRootPath, $"{UserId}_Files");
+            if (!Directory.Exists(route))
+            {
+                Directory.CreateDirectory(route);
+            }
+            var filesInOrder = new DirectoryInfo(route).GetFiles()  //Dosyada bulunan dosyalarin isimlerini degisme tarihlerine gore aliyor.
+                        .OrderByDescending(f => f.LastWriteTime)
+                        .Select(f => f.Name)
+                        .ToList();
+            var filename = $"{filesInOrder.FirstOrDefault()}";
+            if (filename=="")
+            {
+                return BadRequest();
+            }
+
+            string fileRoute = Path.Combine(route, filename);
+
+            byte[] pdfData = System.IO.File.ReadAllBytes(fileRoute);
+
+            return File(pdfData, "application/pdf");
+        }
+
         [HttpPost("SavePdf"), DisableRequestSizeLimit]
         public async Task<IActionResult> PostPdf([FromForm] IFormFile file, int UserId)
         {
@@ -196,7 +234,7 @@ namespace WEBAPI.Controllers
         }
 
         [HttpGet("getFileNames"), DisableRequestSizeLimit]
-        public IActionResult GetByPdfName(int UserId)
+        public IActionResult GetFileNames(int UserId)
         {
 
 
