@@ -4,7 +4,10 @@ using Core.Entities.Concrete;
 using Core.Utilities.Results;
 using Core.Utilities.Security.Hashing;
 using Core.Utilities.Security.JWT;
+using DataAccess.Concrete.Context;
+using Entities.Concrete;
 using Entities.DTO;
+using Entities.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -66,6 +69,27 @@ namespace Business.Concrete
                 Address = userForRegisterDto.Address
             };
             _userService.Add(user);
+            using (DietManagerContext context = new DietManagerContext())
+            {
+                Random rnd = new Random();
+                string[] x = { "Male", "Female" };
+                ClientDefaultData temp = new ClientDefaultData { Age = 20, Height = 1.78,Gender = x[rnd.Next(x.Length)] , ClientId = user.Id };
+
+                context.ClientDefaultData.Add(temp);
+                ClientAllergies allergies = new ClientAllergies { ClientId=user.Id, AllergiesList=""};
+                context.ClientAllergies.Add(allergies);
+                var dietians = context.UserOperationClaims.Where(u=>u.OperationClaimId == 1).ToList();
+                var dietianId = dietians.ElementAt(rnd.Next(dietians.Count)).Id;
+                DietianClientLists dietianClientList = new DietianClientLists
+                {
+                    DietianId = dietianId,
+                    ClientId = user.Id,
+                };
+                context.DietianClients.Add(dietianClientList);
+                context.SaveChanges();
+            }
+
+
             return new SuccessDataResult<User>(user, Messages.UserRegistered);
         }
 
